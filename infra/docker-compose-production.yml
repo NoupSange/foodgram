@@ -1,0 +1,41 @@
+version: '3'
+
+volumes:
+  pg_data:
+  static:
+services:
+  db:
+    image: postgres:13.10
+    env_file: ../.env
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+    restart: always
+
+  backend:
+    # Из какого Dockerfile собирать образ для этого контейнера:
+    build: ../backend/
+    env_file: ../.env
+    volumes:
+      - static:/backend_static
+    depends_on:
+      - db
+  # Имя третьего контейнера. Это контейнер с фронтендом
+  frontend:
+    env_file: ../.env
+    build: ../frontend/
+    command: cp -r /app/build/. /frontend_static/
+    volumes:
+      - static:/frontend_static
+  gateway:
+    # Сбилдить и запустить образ, 
+    # описанный в Dockerfile в папке gateway
+    build: ../gateway/
+    # Ключ ports устанавливает
+    # перенаправление всех запросов с порта 8000 хоста
+    # на порт 80 контейнера
+    ports:
+      - 8000:80
+    volumes:
+      - static:/staticfiles
+    depends_on:
+      - backend
