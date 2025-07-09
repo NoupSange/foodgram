@@ -1,6 +1,7 @@
-from rest_framework import serializers
-
 class SubscribeMixin():
+    """
+    Описывает поле is_subscribed.
+    Возвращает набор подписок автора."""
     def get_is_subscribed(self, obj):
         request = self.context.get('request')
         if request.user == obj:
@@ -8,12 +9,15 @@ class SubscribeMixin():
         else:
             return obj.subscribers.all().filter(user=request.user.id).exists()
 
+
 class ShoppingFavoriteMixin():
     """
-    Миксин для проверки полей is_favorited
-    и is_in_shopping_cart рецепта.
+    Миксин для поверки полей:
+    - Находится ли рецепт в избранном.
+    - Находится ли рецепт в списке покупок.
     """
     def get_is_favorited(self, obj):
+        """Провека избранных рецептов пользователя."""
         request = self.context.get('request')
         user = request.user
         value = (
@@ -23,6 +27,7 @@ class ShoppingFavoriteMixin():
         return value
 
     def get_is_in_shopping_cart(self, obj):
+        """Проверка списка покупок пользователя."""
         request = self.context.get('request')
         user = request.user
         value = (

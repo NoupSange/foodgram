@@ -1,14 +1,17 @@
-from django.shortcuts import get_object_or_404
+from django.contrib.auth import get_user_model
 from django.db.models import Count
-from rest_framework.permissions import AllowAny, IsAuthenticated
-from rest_framework.response import Response
-from rest_framework.decorators import action
+from django.shortcuts import get_object_or_404
 from djoser.views import UserViewSet as DjoserUserViewSet
 from rest_framework import status
-from django.contrib.auth import get_user_model
-from users.models import Subscription
-from api.serializers.users import SubscriptionSerializer, UserSerializer, AvatarSerializer
+from rest_framework.decorators import action
+from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework.response import Response
+
+from api.serializers.users import (AvatarSerializer, SubscriptionSerializer,
+                                   UserSerializer)
 from api.views.pagintaion import LimitPagination
+from users.models import Subscription
+
 User = get_user_model()
 
 
@@ -18,7 +21,6 @@ class UserViewSet(DjoserUserViewSet):
     pagination_class = LimitPagination
 
     def get_serializer_class(self):
-        """Кастомизация выбора сериализатора."""
         if self.action == "me":
             return UserSerializer
         if self.action == "me_avatar":
@@ -55,7 +57,7 @@ class UserViewSet(DjoserUserViewSet):
         detail=False,
     )
     def me_avatar(self, request):
-        """Добавление аватара текущего пользователя."""
+        """Добавление аватара для текущего пользователя."""
 
         if 'avatar' not in request.data:
             return Response(
@@ -74,6 +76,7 @@ class UserViewSet(DjoserUserViewSet):
 
     @me_avatar.mapping.delete
     def delete_me_avatar(self, request):
+        """Удаялет аватар пользователя."""
         user = request.user
         if user.avatar:
             user.avatar = ""
@@ -86,6 +89,10 @@ class UserViewSet(DjoserUserViewSet):
         pagination_class=LimitPagination,
     )
     def subscriptions(self, request):
+        """
+        Возвращает пользователей, на которых подписан текущий пользователь.
+        В выдачу добавляются рецепты.
+        """
         queryset = User.objects.filter(
             subscribers__user=request.user
         ).annotate(
@@ -105,6 +112,7 @@ class UserViewSet(DjoserUserViewSet):
         methods=['post'],
     )
     def subscribe(self, request, id=None):
+        """Подписаться на пользователяПодписаться на пользователя."""
         user = request.user
         author = get_object_or_404(
             User.objects.annotate(recipes_count=Count('recipes')),
@@ -135,6 +143,7 @@ class UserViewSet(DjoserUserViewSet):
 
     @subscribe.mapping.delete
     def unsubscribe(self, request, id=None):
+        """Отписаться от пользователя."""
         user = request.user
         author = get_object_or_404(User, id=id)
         deleted_count, _ = Subscription.objects.filter(

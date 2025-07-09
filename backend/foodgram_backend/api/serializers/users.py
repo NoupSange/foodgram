@@ -1,17 +1,17 @@
 from django.contrib.auth import get_user_model
-from recipes.models import *
-from rest_framework import serializers
 from djoser.serializers import UserSerializer as DjoserUserSerializer
-from recipes.models import Recipe
-from api.serializers.custom_mixins import SubscribeMixin
-User = get_user_model()
-from api.serializers.custom_fields import Base64ImageField
+from rest_framework import serializers
 
+from api.serializers.custom_fields import Base64ImageField
+from api.serializers.custom_mixins import SubscribeMixin
+from recipes.models import Recipe
+
+User = get_user_model()
 
 
 class UserSerializer(DjoserUserSerializer, SubscribeMixin):
+    """Сериализатор данных пользователя."""
     is_subscribed = serializers.SerializerMethodField()
-    # avatar =serializers.SerializerMethodField()
 
     class Meta:
         model = User
@@ -26,13 +26,19 @@ class UserSerializer(DjoserUserSerializer, SubscribeMixin):
         )
 
     def get_is_subscribed(self, obj):
+        """Подписан ли текущий пользователь на этого."""
         request = self.context.get('request')
         if request.user == obj:
             return False
         else:
             return obj.subscribers.all().filter(user=request.user.id).exists()
 
+
 class AvatarSerializer(serializers.Serializer):
+    """
+    Сериализует и десереализует фото автара пользователя
+    в кодировке Base64.
+    """
     avatar = Base64ImageField(required=False)
 
     class Meta:
@@ -40,24 +46,30 @@ class AvatarSerializer(serializers.Serializer):
         fields = ('avatar',)
 
     def update(self, instance, validated_data):
+        """Обновляет фото пользователя при PUT запросе."""
         instance.avatar = validated_data.get('avatar', instance.avatar)
         instance.save()
         return instance
 
 
-class RecipeMiniSerializer(serializers.ModelSerializer):
+class SubscriptionRecipeSerializer(serializers.ModelSerializer):
     """
-    Базовый сериализатор рецепта.
+    Показывает инормацию о рецептах автора,
     """
     image = Base64ImageField()
 
     class Meta:
         model = Recipe
-        fields = ('id', 'name', 'image', 'cooking_time')
+        fields = (
+            'id',
+            'name',
+            'image',
+            'cooking_time'
+        )
 
 
 class SubscriptionSerializer(UserSerializer, SubscribeMixin):
-
+    """Сериализатор рецептов """
     recipes = serializers.SerializerMethodField()
     recipes_count = serializers.IntegerField(read_only=True)
     is_subscribed = serializers.SerializerMethodField()
@@ -76,6 +88,10 @@ class SubscriptionSerializer(UserSerializer, SubscribeMixin):
         )
 
     def get_recipes(self, obj):
+        """
+        Пагинация по параметру запоса recipes_limit.
+        Лимитирует количество показываемых рецептов автора.
+        """
         request = self.context.get('request')
         limit = (
             request.query_params.get('recipes_limit')
@@ -84,4 +100,4 @@ class SubscriptionSerializer(UserSerializer, SubscribeMixin):
         queryset = obj.recipes.all()
         if limit and limit.isdigit():
             queryset = queryset[:int(limit)]
-        return RecipeMiniSerializer(queryset, many=True).data
+        return SubscriptionRecipeSerializer(queryset, many=True).data

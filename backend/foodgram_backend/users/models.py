@@ -1,10 +1,7 @@
-from django.db import models
 from django.contrib.auth.models import AbstractUser
-from django.core.exceptions import ValidationError
+from django.db import models
 
-
-EMAIL_LENGTH = 254
-DEFAULT_LENGTH = 150
+from users.constants import DEFAULT_LENGTH, EMAIL_LENGTH
 
 
 class FoodgramUser(AbstractUser):
@@ -55,7 +52,7 @@ class FoodgramUser(AbstractUser):
 
 
 class Subscription(models.Model):
-    """Модель подписки пользователя на автора."""
+    """Модель подписки пользователя на автора рецепта."""
 
     user = models.ForeignKey(
         FoodgramUser,

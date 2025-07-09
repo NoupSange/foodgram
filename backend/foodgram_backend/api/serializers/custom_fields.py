@@ -1,9 +1,14 @@
 import base64
-from rest_framework import serializers
+
 from django.core.files.base import ContentFile
+from rest_framework import serializers
+
 
 class Base64ImageField(serializers.ImageField):
-    """Класс кастомного поля для изображений."""
+    """
+    Класс кастомного поля сериализатора 
+    для изображений в кодировке Base64.
+    """
     def to_internal_value(self, data):
         if isinstance(data, str) and data.startswith('data:image'):
             format, imgstr = data.split(';base64,')

@@ -1,18 +1,19 @@
 from django.contrib.auth import get_user_model
-from recipes.models import *
-from rest_framework import serializers
-from api.serializers.users import UserSerializer
 from django.db.transaction import atomic
+from rest_framework import serializers
+from rest_framework.exceptions import PermissionDenied, ValidationError
+
 from api.serializers.custom_fields import Base64ImageField
 from api.serializers.custom_mixins import ShoppingFavoriteMixin
-from rest_framework.exceptions import PermissionDenied, ValidationError
+from api.serializers.users import UserSerializer
+from recipes.models import Ingredient, Recipe, RecipeIngredient, Tag
+
 User = get_user_model()
 
 
 class FavoriteRecipeSerializer(serializers.ModelSerializer):
-    """
-    .
-    """
+    """Сериализатор избранных рецептов."""
+
     image = Base64ImageField()
 
     class Meta:
@@ -26,6 +27,7 @@ class FavoriteRecipeSerializer(serializers.ModelSerializer):
 
 
 class TagSerializer(serializers.ModelSerializer):
+    """Сериализатор тегов."""
     class Meta:
         model = Tag
         fields = (
@@ -36,7 +38,10 @@ class TagSerializer(serializers.ModelSerializer):
 
 
 class RecipeIngredientSerializer(serializers.ModelSerializer):
-    """Сериализатор ингредиента с количеством."""
+    """
+    Сериализатор ингредиента с дополнительным
+    полем количества ингредиента.
+    """
 
     id = serializers.PrimaryKeyRelatedField(
         queryset=Ingredient.objects.all()
@@ -57,6 +62,7 @@ class RecipeIngredientSerializer(serializers.ModelSerializer):
 
 
 class RecipeListSerializer(serializers.ModelSerializer, ShoppingFavoriteMixin):
+    """Сериализатор списка рецептов."""
     tags = TagSerializer(many=True)
     author = UserSerializer()
     is_favorited = serializers.SerializerMethodField()
@@ -79,8 +85,8 @@ class RecipeListSerializer(serializers.ModelSerializer, ShoppingFavoriteMixin):
         )
 
 
-
 class IngredientSerializer(serializers.ModelSerializer):
+    """Сериализатор ингредиента."""
     class Meta:
         model = Ingredient
         fields = (
@@ -90,8 +96,9 @@ class IngredientSerializer(serializers.ModelSerializer):
         )
 
 
-class RecipeCreateUpdateSerializer(serializers.ModelSerializer, ShoppingFavoriteMixin):
-    """Сериализатор для создания нового рецепта."""
+class RecipeCreateUpdateSerializer(serializers.ModelSerializer,
+                                   ShoppingFavoriteMixin):
+    """Сериализатор для создания или обновления рецепта."""
     ingredients = RecipeIngredientSerializer(many=True)
     image = Base64ImageField()
     author = UserSerializer(read_only=True)
@@ -114,7 +121,11 @@ class RecipeCreateUpdateSerializer(serializers.ModelSerializer, ShoppingFavorite
         )
         read_only_fields = ('id', 'is_favorited', 'is_in_shopping_cart')
 
-    def _check_dublicates(self, ingredients, tags) -> None:
+    def _check_dublicates_utility(self, ingredients, tags) -> None:
+        """
+        Валидирует наличие дубликатов
+        тегов и рецептов при создании рецепта.
+        """
         seen_items = set()
         for ingredient in ingredients:
             current_ingredient = ingredient["id"]
@@ -133,6 +144,7 @@ class RecipeCreateUpdateSerializer(serializers.ModelSerializer, ShoppingFavorite
             seen_items.add(tag)
 
     def _recipe_ingredient_utility(self, recipe_ingredients, recipe):
+        """Создает связь рецепта и ингридента в промежуточной таблице."""
         for recipe_ingredient in recipe_ingredients:
             current_ingredient = recipe_ingredient["id"]
             RecipeIngredient.objects.get_or_create(
@@ -141,7 +153,8 @@ class RecipeCreateUpdateSerializer(serializers.ModelSerializer, ShoppingFavorite
                 amount=recipe_ingredient["amount"]
             )
 
-    def _pop_data(self, validated_data):
+    def _pop_data_utility(self, validated_data):
+
         try:
             recipe_ingredients = validated_data.pop('ingredients')
             if not recipe_ingredients:
@@ -158,22 +171,24 @@ class RecipeCreateUpdateSerializer(serializers.ModelSerializer, ShoppingFavorite
         """
         Создает связь нового рецепта с ингредиентов(новыи или существующим).
         """
-        recipe_ingredients, tags = self._pop_data(validated_data)
-        self._check_dublicates(recipe_ingredients, tags)
+        recipe_ingredients, tags = self._pop_data_utility(validated_data)
+        self._check_dublicates_utility(recipe_ingredients, tags)
         user = self.context['request'].user
         new_recipe = Recipe.objects.create(author=user, **validated_data)
         self._recipe_ingredient_utility(recipe_ingredients, new_recipe)
         new_recipe.tags.set(tags)
         return new_recipe
 
+    @atomic
     def update(self, recipe, validated_data):
         """Обновляет данные рецепта.
-        Очищает и заново вносит связанные записи тегов и ингридиентов."""
+        Очищает связанные с рецептом теги и ингридиенты,
+        после чего заполняет БД новыми значениями."""
         user = self.context['request'].user
         if user != recipe.author:
             raise PermissionDenied
-        recipe_ingredients, tags = self._pop_data(validated_data)
-        self._check_dublicates(recipe_ingredients, tags)
+        recipe_ingredients, tags = self._pop_data_utility(validated_data)
+        self._check_dublicates_utility(recipe_ingredients, tags)
         RecipeIngredient.objects.filter(recipe=recipe).delete()
         recipe.tags.set(tags)
         self._recipe_ingredient_utility(recipe_ingredients, recipe)

@@ -1,6 +1,8 @@
 import django_filters
-from recipes.models import Recipe, Ingredient
 from django.db.models import Q
+
+from recipes.models import Ingredient, Recipe
+
 
 class IngredientFilter(django_filters.FilterSet):
     """Фильтр для поиска ингредиентов."""
@@ -51,7 +53,9 @@ class RecipeFilter(django_filters.FilterSet):
         )
 
     def filter_tags(self, queryset, name, value):
-        """Фильтрует по тегам."""
+        """
+        Фильтрует по тегам, тегов может быть несколько,
+        Используется логический подход с ИЛИ."""
         if not isinstance(value, list):
             value = [value]
         query = Q()

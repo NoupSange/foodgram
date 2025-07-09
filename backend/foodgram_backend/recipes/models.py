@@ -1,20 +1,18 @@
-from django.db import models
-from django.contrib.auth import get_user_model
-from django.utils.text import slugify
-from django.core.validators import MaxValueValidator, MinValueValidator
-from recipes.constants import MIN_COOKING_TIME, MAX_COOKING_TIME, UUID_MAX_LENGTH
 import shortuuid
+from django.contrib.auth import get_user_model
+from django.core.validators import MaxValueValidator, MinValueValidator
+from django.db import models
+from django.utils.text import slugify
+
+from recipes.constants import (MAX_COOKING_TIME, MIN_COOKING_TIME,
+                               UUID_MAX_LENGTH)
+
 User = get_user_model()
 
 
 class Ingredient(models.Model):
-    """
-    Модель ингредиента.
+    """Модель ингредиента для рецепта."""
 
-    Атрибуты:
-        name (CharField): Название ингредиента.
-        measurement_unit (CharField): Единица измерения.
-    """
     name = models.CharField(
         max_length=128,
         verbose_name="Название ингредиента"
@@ -40,13 +38,7 @@ class Ingredient(models.Model):
 
 
 class Tag(models.Model):
-    """
-    Модель тега.
-
-    Атрибуты:
-        name (CharField): Название тега.
-        slug (SlugField): Уникальный slug для URL.
-    """
+    """Модель тега."""
     name = models.CharField(
         max_length=200,
         unique=True,
@@ -137,12 +129,14 @@ class Recipe(models.Model):
             )
         ]
     )
+
     short_code = models.CharField(
         max_length=UUID_MAX_LENGTH,
         unique=True,
         default=shortuuid.uuid,
         verbose_name='Короткий код',
     )
+
     pub_date = models.DateTimeField(
         auto_now_add=True,
         verbose_name='Дата публикации',
@@ -157,14 +151,8 @@ class Recipe(models.Model):
 
 
 class RecipeIngredient(models.Model):
-    """
-    Промежуточная модель для связи рецептов и ингредиентов с указанием количества.
+    """Промежуточная модель для связи рецептов и ингредиентов."""
 
-    Атрибуты:
-        recipe (ForeignKey): Рецепт.
-        ingredient (ForeignKey): Ингредиент.
-        amount (PositiveIntegerField): Количество ингредиента.
-    """
     recipe = models.ForeignKey(
         Recipe,
         on_delete=models.CASCADE,
@@ -234,7 +222,7 @@ class UserRecipeRelation(models.Model):
 
 
 class Favorite(UserRecipeRelation):
-    """Модель избранного рецепта."""
+    """Модель для хранения избранных рецептов пользователя."""
 
     class Meta(UserRecipeRelation.Meta):
         verbose_name = 'Избранное'
