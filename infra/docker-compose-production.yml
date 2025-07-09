@@ -3,8 +3,10 @@ version: '3'
 volumes:
   pg_data:
   static:
+  media:
 services:
   db:
+    container_name: foodgram_db
     image: postgres:13.10
     env_file: ../.env
     volumes:
@@ -12,30 +14,30 @@ services:
     restart: always
 
   backend:
-    # Из какого Dockerfile собирать образ для этого контейнера:
+    container_name: foodgram_backend
     build: ../backend/
     env_file: ../.env
     volumes:
       - static:/backend_static
+      - media:/app/foodgram_backend/media
     depends_on:
       - db
-  # Имя третьего контейнера. Это контейнер с фронтендом
+    restart: always
   frontend:
+    container_name: foodgram_frontend
     env_file: ../.env
     build: ../frontend/
     command: cp -r /app/build/. /frontend_static/
     volumes:
       - static:/frontend_static
-  gateway:
-    # Сбилдить и запустить образ, 
-    # описанный в Dockerfile в папке gateway
+  nginx:
+    container_name: foodgram-proxy
     build: ../gateway/
-    # Ключ ports устанавливает
-    # перенаправление всех запросов с порта 8000 хоста
-    # на порт 80 контейнера
     ports:
       - 8000:80
     volumes:
       - static:/staticfiles
+      - media:/var/www/foodgram
     depends_on:
       - backend
+    restart: always

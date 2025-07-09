@@ -11,6 +11,7 @@ django-filter==25.1
 django-templated-mail==1.1.1
 djangorestframework==3.16.0
 djangorestframework-simplejwt==4.7.2
+psycopg2-binary==2.9.3 
 djoser==2.1.0
 idna==3.10
 itypes==1.2.0
