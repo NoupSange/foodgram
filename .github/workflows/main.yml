@@ -117,22 +117,23 @@ jobs:
         passphrase: ${{ secrets.SSH_PASSPHRASE }}
         source: "infra/docker-compose.production.yml"
         target: "foodgram"
-    # - name: Executing remote ssh commands to deploy
-    #   uses: appleboy/ssh-action@master
-    #   with:
-    #     host: ${{ secrets.HOST }}
-    #     username: ${{ secrets.USER }}
-    #     key: ${{ secrets.SSH_KEY }}
-    #     passphrase: ${{ secrets.SSH_PASSPHRASE }}
-    #     script: |
-    #       cd foodgram
-    #       # Выполняет pull образов с Docker Hub
-    #       sudo docker compose -f docker-compose.production.yml pull
-    #       # Перезапускает все контейнеры в Docker Compose
-    #       sudo docker compose -f docker-compose.production.yml down
-    #       sudo docker compose -f docker-compose.production.yml up -d
-    #       # Выполняет миграции и сбор статики
-    #       sudo docker compose -f docker-compose.production.yml exec backend python manage.py migrate
-    #       sudo docker compose -f docker-compose.production.yml exec backend python manage.py collectstatic
-    #       sudo docker compose -f docker-compose.production.yml exec backend python manage.py load_data
-    #       sudo docker compose -f docker-compose.production.yml exec backend cp -r /app/foodgram_backend/collected_static/. /backend_static/static/
+    - name: Executing remote ssh commands to deploy
+      uses: appleboy/ssh-action@master
+      with:
+        host: ${{ secrets.HOST }}
+        username: ${{ secrets.USER }}
+        key: ${{ secrets.SSH_KEY }}
+        passphrase: ${{ secrets.SSH_PASSPHRASE }}
+        script: |
+          pwd
+          cd foodgram/infra/
+          # Выполняет pull образов с Docker Hub
+          sudo docker compose -f docker-compose.production.yml pull
+          # Перезапускает все контейнеры в Docker Compose
+          sudo docker compose -f docker-compose.production.yml down
+          sudo docker compose -f docker-compose.production.yml up -d
+          # Выполняет миграции и сбор статики
+          sudo docker compose -f docker-compose.production.yml exec backend python manage.py migrate
+          sudo docker compose -f docker-compose.production.yml exec backend python manage.py collectstatic
+          sudo docker compose -f docker-compose.production.yml exec backend python manage.py load_data
+          sudo docker compose -f docker-compose.production.yml exec backend cp -r /app/foodgram_backend/collected_static/. /backend_static/static/
