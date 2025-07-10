@@ -37,9 +37,6 @@ services:
       - ./nginx.conf:/etc/nginx/conf.d/default.conf
       - static:/staticfiles
       - media:/var/www/foodgram
-      - type: bind
-        source: ../frontend/build
-        target: /app/frontend/build
     depends_on:
       - backend
     restart: always
