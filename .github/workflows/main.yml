@@ -77,4 +77,4 @@ jobs:
         with:
           context: ./frontend/
           push: true
-          tags: username/foodgram_frontend:latest 
+          tags: noupsange/foodgram_frontend:latest 
