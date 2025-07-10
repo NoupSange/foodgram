@@ -1,7 +1,6 @@
+from api.views import recipes, users
 from django.urls import include, path, re_path
 from rest_framework import routers
-
-from api.views import recipes, users
 
 api_v1 = routers.DefaultRouter()
 api_v1.register(r'users', users.UserViewSet, basename='users')

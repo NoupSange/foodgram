@@ -1,12 +1,11 @@
-from django.contrib.auth import get_user_model
-from django.db.transaction import atomic
-from rest_framework import serializers
-from rest_framework.exceptions import PermissionDenied, ValidationError
-
 from api.serializers.custom_fields import Base64ImageField
 from api.serializers.custom_mixins import ShoppingFavoriteMixin
 from api.serializers.users import UserSerializer
+from django.contrib.auth import get_user_model
+from django.db.transaction import atomic
 from recipes.models import Ingredient, Recipe, RecipeIngredient, Tag
+from rest_framework import serializers
+from rest_framework.exceptions import PermissionDenied, ValidationError
 
 User = get_user_model()
 

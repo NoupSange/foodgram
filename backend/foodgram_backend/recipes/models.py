@@ -3,7 +3,6 @@ from django.contrib.auth import get_user_model
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 from django.utils.text import slugify
-
 from recipes.constants import (MAX_COOKING_TIME, MIN_COOKING_TIME,
                                UUID_MAX_LENGTH)
 
