@@ -13,33 +13,50 @@ class Command(BaseCommand):
             'file_name': 'ingredients',
             'model': 'recipes.Ingredient',
             'fields': ['name', 'measurement_unit'],
-            'type': 'csv'
+            'type': 'json'
         },
         {
             'file_name': 'tags',
             'model': 'recipes.Tag',
             'fields': ['name', 'slug'],
             'type': 'json'
-        }
-        # Добавьте другие файлы, если нужно
+        },
+        {
+            'file_name': 'users',
+            'model': 'users.FoodgramUser',
+            'fields': [
+                "email",
+                "password",
+                "username,"
+                "first_name",
+                "last_name",
+                "avatar"
+            ],
+            'type': 'json'
+        },
+
     ]
     help = 'Загрузка данных из CSV и JSON файлов в указанные модели'
 
     def __init__(self) -> None:
+        """Обозначаем цветовую окарску заметок и педупреждений."""
         super().__init__()
-        self.style.NOTICE = termcolors.make_style(fg='yellow', opts=('bold',))
+        self.style.NOTICE = termcolors.make_style(fg='cyan')
+        self.style.WARNING = termcolors.make_style(fg='yellow')
 
     def add_arguments(self, parser):
+        """Добавляем аргумент для указания формата файла фикстуры."""
         parser.add_argument(
             'file_type',
             type=str,
             nargs='?',
             default='all',
-            help='Тип файла для загрузки: csv, json, или all (все файлы)'
+            help='Тип файла фикстуры: csv, json, или all (все файлы)'
         )
 
     @atomic
     def handle(self, *args, **kwargs):
+        """Основная логика команды."""
         from django.apps import apps
 
         file_type: str = kwargs['file_type'].lower()
@@ -47,8 +64,8 @@ class Command(BaseCommand):
         valid_file_types = {'csv', 'json', 'all'}
         if file_type not in valid_file_types:
             self.stderr.write(self.style.ERROR(
-                f'Не корректный тип файла: {file_type}. Доступные варианты: csv, json, '
-                'all.'
+                f'Не корректный тип файла: {file_type}. '
+                f'Доступные варианты: csv, json, all.'
             ))
             return
 
@@ -56,8 +73,8 @@ class Command(BaseCommand):
             for entry in self.data:
                 if file_type != 'all' and entry['type'] != file_type:
                     self.stderr.write(self.style.WARNING(
-                        f'Данные {entry} не подходят для загрузки при '
-                        'заданных параметрах.'
+                        f'Данные {entry} не подходят для '
+                        'загрузки при заданных параметрах.'
                     ))
                     continue
 
