@@ -125,7 +125,6 @@ jobs:
         key: ${{ secrets.SSH_KEY }}
         passphrase: ${{ secrets.SSH_PASSPHRASE }}
         script: |
-          pwd
           cd foodgram/infra/
           # Выполняет pull образов с Docker Hub
           sudo docker compose -f docker-compose.production.yml pull
