@@ -1,6 +1,5 @@
 import django_filters
-from django.db.models import Q
-from recipes.models import Ingredient, Recipe
+from recipes.models import Ingredient, Recipe, Tag
 
 
 class IngredientFilter(django_filters.FilterSet):
@@ -25,9 +24,10 @@ class RecipeFilter(django_filters.FilterSet):
     is_in_shopping_cart = django_filters.NumberFilter(
         method='filter_is_in_shopping_cart'
     )
-    tags = django_filters.AllValuesMultipleFilter(
+    tags = django_filters.ModelMultipleChoiceFilter(
         field_name='tags__slug',
-        help_text='Фильтрация по слагам тегов',
+        queryset=Tag.objects.all(),
+        to_field_name='slug',
     )
 
     class Meta:
@@ -43,6 +43,7 @@ class RecipeFilter(django_filters.FilterSet):
 
     def filter_is_favorited(self, queryset, name, value):
         """Фильтрует по рецептам в избранном"""
+        print('сработал is_favorited')
         return self._filter_by_user_relation(queryset, 'is_favorited', value)
 
     def filter_is_in_shopping_cart(self, queryset, name, value):
@@ -50,14 +51,3 @@ class RecipeFilter(django_filters.FilterSet):
         return self._filter_by_user_relation(
             queryset, 'is_in_shopping_cart', value
         )
-
-    def filter_tags(self, queryset, name, value):
-        """
-        Фильтрует по тегам, тегов может быть несколько,
-        Используется логический подход с ИЛИ."""
-        if not isinstance(value, list):
-            value = [value]
-        query = Q()
-        for tag in value:
-            query |= Q(tags__slug=tag)
-        return queryset.filter(query).distinct()
