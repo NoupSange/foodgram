@@ -42,6 +42,8 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+CSRF_TRUSTED_ORIGINS = ['51.250.101.209', '127.0.0.1', 'localhost', 'foodgramnoup.zapto.org']
 ROOT_URLCONF = 'foodgram_backend.urls'
 
 TEMPLATES = [
