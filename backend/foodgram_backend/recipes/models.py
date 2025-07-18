@@ -3,6 +3,7 @@ from django.contrib.auth import get_user_model
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 from django.utils.text import slugify
+
 from recipes.constants import (MAX_COOKING_TIME, MIN_COOKING_TIME,
                                UUID_MAX_LENGTH)
 
@@ -19,7 +20,8 @@ class Ingredient(models.Model):
 
     measurement_unit = models.CharField(
         max_length=64,
-        verbose_name="Единица измерения"
+        verbose_name="Единица измерения",
+        help_text="мл, г, шт..."
     )
 
     class Meta:
@@ -72,7 +74,7 @@ class Recipe(models.Model):
         author (ForeignKey): Автор публикации (пользователь).
         name (CharField): Название рецепта.
         image (ImageField): Картинка рецепта.
-        description (TextField): Текстовое описание рецепта.
+        text (TextField): Текстовое описание рецепта.
         ingredients (ManyToManyField): Ингредиенты для приготовления.
         tags (ManyToManyField): Теги рецепта.
         cooking_time (PositiveIntegerField): Время приготовления в минутах.

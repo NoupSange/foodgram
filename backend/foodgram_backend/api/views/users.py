@@ -1,6 +1,3 @@
-from api.serializers.users import (AvatarSerializer, SubscriptionSerializer,
-                                   UserSerializer)
-from api.views.pagintaion import LimitPagination
 from django.contrib.auth import get_user_model
 from django.db.models import Count
 from django.shortcuts import get_object_or_404
@@ -9,6 +6,10 @@ from rest_framework import status
 from rest_framework.decorators import action
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
+
+from api.serializers.users import (AvatarSerializer, SubscriptionSerializer,
+                                   UserSerializer)
+from api.views.pagintaion import LimitPagination
 from users.models import Subscription
 
 User = get_user_model()
