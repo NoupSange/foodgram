@@ -43,7 +43,6 @@ class RecipesAdmin(admin.ModelAdmin):
     list_display = (
         'name',
         'author',
-        'text',
         'cooking_time',
         'favorite_count'
     )
