@@ -56,7 +56,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
     """Вьюсет рецептов. Реализует весь CRUD."""
     queryset = Recipe.objects.all()
     permission_classes = [IsAuthenticatedOrReadOnly, IsAuthorOrReadOnly]
-    filter_backends = [DjangoFilterBackend,]
+    filter_backends = [DjangoFilterBackend, ]
     filterset_class = RecipeFilter
     pagination_class = LimitPagination
 
