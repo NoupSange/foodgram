@@ -25,14 +25,6 @@ class UserSerializer(DjoserUserSerializer, SubscribeMixin):
             'avatar'
         )
 
-    def get_is_subscribed(self, obj):
-        """Подписан ли текущий пользователь на этого."""
-        request = self.context.get('request')
-        if request.user == obj:
-            return False
-        else:
-            return obj.subscribers.all().filter(user=request.user.id).exists()
-
 
 class AvatarSerializer(serializers.Serializer):
     """
@@ -92,7 +84,7 @@ class SubscriptionSerializer(UserSerializer, SubscribeMixin):
         Пагинация по параметру запоса recipes_limit.
         Лимитирует количество показываемых рецептов автора.
         """
-        request = self.context.get('request')
+        request = self.context['request']
         limit = (
             request.query_params.get('recipes_limit')
             if request else None

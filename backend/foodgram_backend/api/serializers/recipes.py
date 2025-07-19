@@ -1,11 +1,14 @@
 from django.contrib.auth import get_user_model
 from django.db.transaction import atomic
 from rest_framework import serializers
-from rest_framework.exceptions import PermissionDenied, ValidationError
+from rest_framework.exceptions import ValidationError
 
 from api.serializers.custom_fields import Base64ImageField
 from api.serializers.custom_mixins import ShoppingFavoriteMixin
 from api.serializers.users import UserSerializer
+from recipes.constants import (
+    MAX_AMOUNT_OF_INGREDIENT, MIN_AMOUNT_OF_INGREDIENT
+)
 from recipes.models import Ingredient, Recipe, RecipeIngredient, Tag
 
 User = get_user_model()
@@ -19,10 +22,10 @@ class FavoriteRecipeSerializer(serializers.ModelSerializer):
     class Meta:
         model = Recipe
         fields = (
-            'id',
-            'name',
-            'image',
-            'cooking_time'
+            "id",
+            "name",
+            "image",
+            "cooking_time"
         )
 
 
@@ -31,9 +34,9 @@ class TagSerializer(serializers.ModelSerializer):
     class Meta:
         model = Tag
         fields = (
-            'id',
-            'name',
-            'slug'
+            "id",
+            "name",
+            "slug"
         )
 
 
@@ -46,18 +49,22 @@ class RecipeIngredientSerializer(serializers.ModelSerializer):
     id = serializers.PrimaryKeyRelatedField(
         queryset=Ingredient.objects.all()
     )
-    name = serializers.ReadOnlyField(source='ingredient.name')
+    name = serializers.ReadOnlyField(source="ingredient.name")
     measurement_unit = serializers.ReadOnlyField(
-        source='ingredient.measurement_unit',
+        source="ingredient.measurement_unit",
+    )
+    amount = serializers.IntegerField(
+        min_value=MIN_AMOUNT_OF_INGREDIENT,
+        max_value=MAX_AMOUNT_OF_INGREDIENT
     )
 
     class Meta:
         model = RecipeIngredient
         fields = (
-            'id',
-            'name',
-            'measurement_unit',
-            'amount'
+            "id",
+            "name",
+            "measurement_unit",
+            "amount"
         )
 
 
@@ -67,21 +74,23 @@ class RecipeListSerializer(serializers.ModelSerializer, ShoppingFavoriteMixin):
     author = UserSerializer()
     is_favorited = serializers.SerializerMethodField()
     is_in_shopping_cart = serializers.SerializerMethodField()
-    ingredients = RecipeIngredientSerializer(many=True)
+    ingredients = RecipeIngredientSerializer(
+        source='recipe_ingredients', many=True
+    )
 
     class Meta:
         model = Recipe
         fields = (
-            'id',
-            'tags',
-            'author',
-            'ingredients',
-            'is_favorited',
-            'is_in_shopping_cart',
-            'name',
-            'image',
-            'text',
-            'cooking_time',
+            "id",
+            "tags",
+            "author",
+            "ingredients",
+            "is_favorited",
+            "is_in_shopping_cart",
+            "name",
+            "image",
+            "text",
+            "cooking_time",
         )
 
 
@@ -90,36 +99,42 @@ class IngredientSerializer(serializers.ModelSerializer):
     class Meta:
         model = Ingredient
         fields = (
-            'id',
-            'name',
-            'measurement_unit'
+            "id",
+            "name",
+            "measurement_unit"
         )
 
 
 class RecipeCreateUpdateSerializer(serializers.ModelSerializer,
                                    ShoppingFavoriteMixin):
     """Сериализатор для создания или обновления рецепта."""
-    ingredients = RecipeIngredientSerializer(many=True)
+    ingredients = RecipeIngredientSerializer(
+        source='recipe_ingredients', many=True
+    )
     image = Base64ImageField()
     author = UserSerializer(read_only=True)
     is_favorited = serializers.SerializerMethodField()
     is_in_shopping_cart = serializers.SerializerMethodField()
+    cooking_time = serializers.IntegerField(
+        min_value=MIN_AMOUNT_OF_INGREDIENT,
+        max_value=MAX_AMOUNT_OF_INGREDIENT
+    )
 
     class Meta:
         model = Recipe
         fields = (
-            'id',
-            'tags',
-            'author',
-            'ingredients',
-            'is_favorited',
-            'is_in_shopping_cart',
-            'name',
-            'image',
-            'text',
-            'cooking_time',
+            "id",
+            "tags",
+            "author",
+            "ingredients",
+            "is_favorited",
+            "is_in_shopping_cart",
+            "name",
+            "image",
+            "text",
+            "cooking_time",
         )
-        read_only_fields = ('id', 'is_favorited', 'is_in_shopping_cart')
+        read_only_fields = ("id", "is_favorited", "is_in_shopping_cart")
 
     def _check_dublicates_utility(self, ingredients, tags) -> None:
         """
@@ -156,24 +171,24 @@ class RecipeCreateUpdateSerializer(serializers.ModelSerializer,
     def _pop_data_utility(self, validated_data):
 
         try:
-            recipe_ingredients = validated_data.pop('ingredients')
+            recipe_ingredients = validated_data.pop("recipe_ingredients")
             if not recipe_ingredients:
                 raise ValidationError(
-                    'Необходимо указать хотя бы 1 ингредиент.'
+                    "Необходимо указать хотя бы 1 ингредиент."
                 )
-            tags = validated_data.pop('tags')
+            tags = validated_data.pop("tags")
             return recipe_ingredients, tags
         except Exception as e:
-            raise ValidationError(f'Поле {e} не заполнено.')
+            raise ValidationError(f"Поле {e} не заполнено.")
 
     @atomic
     def create(self, validated_data):
         """
-        Создает связь нового рецепта с ингредиентов(новыи или существующим).
+        Создает связь нового рецепта с ингредиентов(новым или существующим).
         """
         recipe_ingredients, tags = self._pop_data_utility(validated_data)
         self._check_dublicates_utility(recipe_ingredients, tags)
-        user = self.context['request'].user
+        user = self.context["request"].user
         new_recipe = Recipe.objects.create(author=user, **validated_data)
         self._recipe_ingredient_utility(recipe_ingredients, new_recipe)
         new_recipe.tags.set(tags)
@@ -181,15 +196,14 @@ class RecipeCreateUpdateSerializer(serializers.ModelSerializer,
 
     @atomic
     def update(self, recipe, validated_data):
-        """Обновляет данные рецепта.
+        """
+        Обновляет данные рецепта.
         Очищает связанные с рецептом теги и ингридиенты,
-        после чего заполняет БД новыми значениями."""
-        user = self.context['request'].user
-        if user != recipe.author:
-            raise PermissionDenied
+        после чего заполняет БД новыми значениями.
+        """
         recipe_ingredients, tags = self._pop_data_utility(validated_data)
         self._check_dublicates_utility(recipe_ingredients, tags)
-        RecipeIngredient.objects.filter(recipe=recipe).delete()
+        recipe.recipe_ingredients.all().delete()
         recipe.tags.set(tags)
         self._recipe_ingredient_utility(recipe_ingredients, recipe)
         recipe = super().update(recipe, validated_data)
@@ -200,5 +214,5 @@ class RecipeCreateUpdateSerializer(serializers.ModelSerializer,
         """Преобразует список ID тегов в список объектов тегов."""
         representation = super().to_representation(instance)
         tags = instance.tags.all()
-        representation['tags'] = TagSerializer(tags, many=True).data
+        representation["tags"] = TagSerializer(tags, many=True).data
         return representation

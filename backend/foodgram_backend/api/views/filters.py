@@ -44,7 +44,6 @@ class RecipeFilter(django_filters.FilterSet):
 
     def filter_is_favorited(self, queryset, name, value):
         """Фильтрует по рецептам в избранном"""
-        print('сработал is_favorited')
         return self._filter_by_user_relation(queryset, 'is_favorited', value)
 
     def filter_is_in_shopping_cart(self, queryset, name, value):

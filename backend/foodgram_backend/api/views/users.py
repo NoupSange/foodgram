@@ -35,9 +35,9 @@ class UserViewSet(DjoserUserViewSet):
         или созданию нового пользователя. Остальные permissioins
         наследуются от родительского класса.
         """
-        if self.action in ('list', 'create'):
+        if self.action in ("list", "create"):
             self.permission_classes = [AllowAny]
-        elif self.action == 'retrieve':
+        elif self.action == "retrieve":
             return [AllowAny()]
         else:
             self.permission_classes = [IsAuthenticated]
@@ -53,15 +53,15 @@ class UserViewSet(DjoserUserViewSet):
 
     @action(
         methods=["put"],
-        url_path='me/avatar',
+        url_path="me/avatar",
         detail=False,
     )
     def me_avatar(self, request):
         """Добавление аватара для текущего пользователя."""
 
-        if 'avatar' not in request.data:
+        if "avatar" not in request.data:
             return Response(
-                {'avatar': 'Обязательное поле'},
+                {"avatar": "Обязательное поле"},
                 status=status.HTTP_400_BAD_REQUEST
             )
         serializer = self.get_serializer(
@@ -85,7 +85,7 @@ class UserViewSet(DjoserUserViewSet):
 
     @action(
         detail=False,
-        methods=['get'],
+        methods=["get"],
         pagination_class=LimitPagination,
     )
     def subscriptions(self, request):
@@ -96,32 +96,32 @@ class UserViewSet(DjoserUserViewSet):
         queryset = User.objects.filter(
             subscribers__user=request.user
         ).annotate(
-            recipes_count=Count('recipes')
-        ).order_by('username')
+            recipes_count=Count("recipes")
+        ).order_by("username")
 
         page = self.paginate_queryset(queryset)
         serializer = self.get_serializer(
             page,
             many=True,
-            context={'request': request},
+            context={"request": request},
         )
         return self.get_paginated_response(serializer.data)
 
     @action(
         detail=True,
-        methods=['post'],
+        methods=["post"],
     )
     def subscribe(self, request, id=None):
         """Подписаться на пользователяПодписаться на пользователя."""
         user = request.user
         author = get_object_or_404(
-            User.objects.annotate(recipes_count=Count('recipes')),
+            User.objects.annotate(recipes_count=Count("recipes")),
             id=id,
         )
 
         if author == user:
             return Response(
-                {'detail': 'Нельзя подписаться на себя.'},
+                {"detail": "Нельзя подписаться на себя."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
@@ -131,13 +131,13 @@ class UserViewSet(DjoserUserViewSet):
         )
         if not created:
             return Response(
-                {'detail': 'Вы уже подписаны на этого пользователя.'},
+                {"detail": "Вы уже подписаны на этого пользователя."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
         serializer = self.get_serializer(
             author,
-            context={'request': request},
+            context={"request": request},
         )
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
@@ -146,14 +146,13 @@ class UserViewSet(DjoserUserViewSet):
         """Отписаться от пользователя."""
         user = request.user
         author = get_object_or_404(User, id=id)
-        deleted_count, _ = Subscription.objects.filter(
-            user=user,
+        deleted_count, _ = user.subscriptions.filter(
             author=author,
         ).delete()
 
         if deleted_count == 0:
             return Response(
-                {'detail': 'Вы не подписаны на этого пользователя.'},
+                {"detail": "Вы не подписаны на этого пользователя."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
