@@ -3,11 +3,10 @@ class SubscribeMixin:
     Описывает поле is_subscribed.
     Возвращает набор подписок автора."""
     def get_is_subscribed(self, obj):
-        request = self.context['request']
+        request = self.context["request"]
         if request.user == obj:
             return False
-        else:
-            return obj.subscribers.all().filter(user=request.user.id).exists()
+        return obj.subscribers.all().filter(user=request.user.id).exists()
 
 
 class ShoppingFavoriteMixin:
@@ -18,7 +17,7 @@ class ShoppingFavoriteMixin:
     """
     def get_is_favorited(self, obj):
         """Провека избранных рецептов пользователя."""
-        request = self.context['request']
+        request = self.context["request"]
         user = request.user
         value = (
             False if user.is_anonymous
@@ -28,7 +27,7 @@ class ShoppingFavoriteMixin:
 
     def get_is_in_shopping_cart(self, obj):
         """Проверка списка покупок пользователя."""
-        request = self.context['request']
+        request = self.context["request"]
         user = request.user
         value = (
             False if user.is_anonymous

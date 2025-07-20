@@ -75,7 +75,7 @@ class RecipeListSerializer(serializers.ModelSerializer, ShoppingFavoriteMixin):
     is_favorited = serializers.SerializerMethodField()
     is_in_shopping_cart = serializers.SerializerMethodField()
     ingredients = RecipeIngredientSerializer(
-        source='recipe_ingredients', many=True
+        source="recipe_ingredients", many=True
     )
 
     class Meta:
@@ -109,7 +109,7 @@ class RecipeCreateUpdateSerializer(serializers.ModelSerializer,
                                    ShoppingFavoriteMixin):
     """Сериализатор для создания или обновления рецепта."""
     ingredients = RecipeIngredientSerializer(
-        source='recipe_ingredients', many=True
+        source="recipe_ingredients", many=True
     )
     image = Base64ImageField()
     author = UserSerializer(read_only=True)
