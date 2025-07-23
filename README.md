@@ -36,30 +36,113 @@ API на ![DjangoREST](https://img.shields.io/badge/DJANGO-REST-ff1709?style=for
 -----
 ### Страницы проекта
 Проект состоит из следующих страниц:
-- главная
-<img src="https://github.com/NoupSange/NoupSange/blob/main/images/main_page.png">
+
+<details>
+<summary>Главная</summary>
+<img width="500px" src="https://github.com/NoupSange/NoupSange/blob/main/images/main_page.png"><br>
 На данной странице настроена пагинация до 6 объектов рецепта, фильтрация по тегам. При первичном переходе на главную страницу Frontend отпарвяет get запрос к api фильтруя выборку рецептов по всем тегам:
 
 `https://<адрес_сайта>
 /api/recipes/?page=1&limit=6&tags=dessert&tags=vegeterian&tags=breakfast&tags=drink&tags=lunch&tags=salad&tags=soups&tags=dinner`
 
 Авторизованный пользователь может добавлять рецепты в список покупок или избранное.
-- страница входа
-<img src="https://github.com/NoupSange/NoupSange/blob/main/images/enter%20page.png">
+</details>
 
-- страница регистрации,
-- страница рецепта,
-- страница пользователя,
-- страница подписок,
-- избранное,
-- список покупок,
-- создание и редактирование рецепта,
+-----
+<details>
+<summary>Cтраница регистрации</summary>
+<img width="500px" src="https://github.com/NoupSange/NoupSange/blob/main/images/reg_page.png"><br>
+Уникальным идентификатор пользователя изменен на поле почты.
+</details>
+
+-----
+<details>
+<summary>Страница входа</summary>
+<img width="500px" src="https://github.com/NoupSange/NoupSange/blob/main/images/enter_page.png">
+</details>
+
+-----
+<details>
+<summary>Cтраница рецепта</summary>
+
+<img width="500px" src="https://github.com/NoupSange/NoupSange/blob/main/images/recipe_page.png"><br>
+Авторизованный пользователь может редактировать свой рецепт, добавить рецепт в избранное или список покупок, подписаться на другого автора.
+</details>
+
+-----
+- страница пользователя
+- страница подписок
+- избранное
+- список покупок
+- создание и редактирование рецепта
 - страница смены пароля
 
 
+-----
+# Установка и запуск проекта
+<details>
+<summary>1. Клонирование репозитория</summary>
+Клонируйте репозиторий:
+  
+`git clone https://github.com/NoupSange/foodgram.git`
+</details>
+<details>
+<summary>2. Файл .env</summary>
 
-Адрес сервера: 51.250.101.209
-Домен: foodgramnoup.zapto.org
-Админ-панель:
-  логин: admin@admin.ru
-  пароль: admin_2025
+Перейдите директорию проекта и создайте файл с переменными окружения .env:
+<br>
+```
+cd foodgram
+touch .env
+```
+
+Добавьте необходимые переменные окружения, пример:
+```
+DEBUG=False
+
+POSTGRES_USER=django_user
+POSTGRES_PASSWORD=django_password
+POSTGRES_DB=django_db
+
+DB_HOST=db
+DB_PORT=5432
+```
+</details>
+
+<details>
+<summary>3. Запустите docker-оркестрацию контейнеров:</summary>
+  
+  ```
+cd infra
+# запуск контейнеров в интерактивном режиме
+docker compose up -d
+  ```
+Дождитесь создания образов и запуска контейнеров.
+</details>
+<details>
+<summary>4. Заполните контейнеры нужными данными:</summary>
+  
+  ```
+# выполните миграции БД
+docker compose exec backend python manage.py migrate
+
+# создайте суперпользователя для использования админ-панели django
+docker compose exec backend python manage.py createsuperuser
+
+# загрузите фикстуры
+docker compose exec backend python manage.py load_data
+
+# скопируйте статику для админ-панели
+docker compose exec backend python manage.py collectstatic
+
+# переместите статику админк-панели в общий том для nginx и backend
+docker compose exec backend cp -r /app/foodgram_backend/collected_static/. /backend_static/static/
+
+# переместите API спецификацию в общий том для nginx
+docker compose exec backend cp -r /app/docs /backend_static/
+  ```
+Дождитесь создания образов и запуска контейнеров. В браузере откройте http://127.0.0.1/.
+</details>
+Все готово! 
+http://127.0.0.1/ - проект. 
+http://127.0.0.1/api/docs/ - API спецификация.
