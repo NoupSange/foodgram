@@ -19,7 +19,7 @@
 
 -----
 ### API
-API на ![DjangoREST](https://img.shields.io/badge/DJANGO-REST-ff1709?style=for-the-badge&logo=django&logoColor=white&color=ff1709&labelColor=gray) реализовано строго согласно спецификации из ТЗ, которую можно посмотреть (после развертывания проекта) по адресу: http://localhost/api/docs/.
+API на ![DjangoREST](https://img.shields.io/badge/DJANGO-REST-ff1709?style=for-the-badge&logo=django&logoColor=white&color=ff1709&labelColor=gray) реализовано строго согласно спецификации из ТЗ, которую можно посмотреть (после развертывания проекта) по адресу: http://localhost/api/docs/. Запущен browsable API по адресу http://localhost/api/.
 
 -----
 ### Авторизация
@@ -70,13 +70,47 @@ API на ![DjangoREST](https://img.shields.io/badge/DJANGO-REST-ff1709?style=for
 </details>
 
 -----
-- страница пользователя
-- страница подписок
-- избранное
-- список покупок
-- создание и редактирование рецепта
-- страница смены пароля
+<details>
+<summary>Страница пользователя</summary>
+На странице — имя пользователя, все рецепты, опубликованные пользователем, и кнопка, чтобы подписаться или отписаться от него.
+</details>
 
+-----
+<details>
+<summary>Страница подписок</summary>
+Только владелец аккаунта может просмотреть свою страницу подписок. Ссылка на неё находится в выпадающем меню в правом верхнем углу.
+</details>
+
+-----
+<details>
+<summary>Избранное</summary>
+Список избранных рецептов. Добавлять рецепты в избранное может только залогиненный пользователь.
+</details>
+
+-----
+<details>
+<summary>Список покупок</summary>
+Список избранных рецептов. Добавлять рецепты в избранное может только залогиненный пользователь.
+</details>
+
+-----
+<details>
+<summary>Создание и редактирование рецепта</summary>
+Эта страница доступна только для залогиненных пользователей. Все поля на ней обязательны для заполнения. 
+Сценарий поведения пользователя:
+
+1. Пользователь переходит на страницу добавления рецепта, нажав на кнопку Создать рецепт в шапке сайта.
+2. Пользователь заполняет все обязательные поля.
+3. Пользователь нажимает кнопку Создать рецепт.
+
+Также пользователь может отредактировать любой рецепт, который он создал.
+</details>
+
+-----
+<details>
+<summary>Страница смены пароля</summary>
+Стандартная форма для заполнения.
+</details>
 
 -----
 # Установка и запуск проекта
@@ -143,6 +177,192 @@ docker compose exec backend cp -r /app/docs /backend_static/
   ```
 Дождитесь создания образов и запуска контейнеров. В браузере откройте http://127.0.0.1/.
 </details>
-Все готово! 
-http://127.0.0.1/ - проект. 
+Приложение готово к работе. <br>
+http://127.0.0.1/ - проект. <br>
 http://127.0.0.1/api/docs/ - API спецификация.
+
+-----
+# Примеры запросов к API:
+
+- GET: .../api/users/ <br>
+<details>
+<summary>RESPONSE: </summary>
+
+```
+HTTP 200 OK
+Allow: GET, POST, HEAD, OPTIONS
+Content-Type: application/json
+Vary: Accept
+
+{
+    "count": 5,
+    "next": null,
+    "previous": null,
+    "results": [
+        {
+            "email": "aaaaaaaaaaaaa@a.ru",
+            "id": 5,
+            "username": "aaaaaaaaa",
+            "first_name": "aaaaaaaa",
+            "last_name": "aaaaaa",
+            "is_subscribed": false,
+            "avatar": null
+        },
+        {
+            "email": "natalie@yandex.ru",
+            "id": 2,
+            "username": "Natlalie",
+            "first_name": "Наталья",
+            "last_name": "Лилова",
+            "is_subscribed": false,
+            "avatar": "https://foodgramnoup.zapto.org/media/users/avatars/temp.jpeg"
+        },
+        {
+            "email": "svetlana@svetlana.ru",
+            "id": 4,
+            "username": "Svetlana",
+            # ...
+```
+
+</details>
+
+- GET: ...api/recipes/?tags=lunch&limit=2 <br>
+<details>
+<summary>RESPONCE: </summary>
+  
+```
+  HTTP 200 OK
+Allow: GET, POST, HEAD, OPTIONS
+Content-Type: application/json
+Vary: Accept
+
+{
+    "count": 4,
+    "next": "https://foodgramnoup.zapto.org/api/recipes/?limit=2&page=2&tags=lunch",
+    "previous": null,
+    "results": [
+        {
+            "id": 7,
+            "tags": [
+                {
+                    "id": 4,
+                    "name": "Десерт",
+                    "slug": "dessert"
+                },
+                {
+                    "id": 1,
+                    "name": "Завтрак",
+                    "slug": "breakfast"
+                },
+                {
+                    "id": 2,
+                    "name": "Обед",
+                    "slug": "lunch"
+                },
+                {
+                    "id": 3,
+                    "name": "Ужин",
+                    "slug": "dinner"
+                }
+            ],
+            "author": {
+                "email": "natalie@yandex.ru",
+                "id": 2,
+                "username": "Natlalie",
+                "first_name": "Наталья",
+                "last_name": "Лилова",
+                "is_subscribed": false,
+                "avatar": "https://foodgramnoup.zapto.org/media/users/avatars/temp.jpeg"
+            },
+            "ingredients": [
+                {
+                    "id": 21,
+                    "name": "апельсиновый сок свежевыжатый",
+                    "measurement_unit": "мл",
+                    "amount": 250
+                },
+                {
+                    "id": 26,
+                    "name": "сахар",
+                    "measurement_unit": "г",
+                    "amount": 50
+                },
+                {
+                    "id": 27,
+                    "name": "кукурузный крахмал",
+                    "measurement_unit": "г",
+                    "amount": 25
+                },
+                {
+                    "id": 28,
+                    "name": "кокосовая стружка",
+                    "measurement_unit": "г",
+                    "amount": 20
+                }
+            ],
+            "is_favorited": false,
+            "is_in_shopping_cart": false,
+            "name": "Апельсиновый десерт",
+            "image": "https://foodgramnoup.zapto.org/media/recipes/b4be97183dbf11ee81bcca697c28bd51_upscaled.jpeg",
+            "text": "Сегодня готовим десерт из 3-х ингредиентов, рецепт которого очень популярен в последнее время. Без яиц, молока и муки. Десерт без выпечки готовится из минимального количества продуктов и супербыстро, за 10 минут, не считая времени его застывания в холодильнике.",
+            "cooking_time": 20
+        },
+        {
+            "id": 5,
+            "tags": [
+                {
+                    "id": 2,
+                    "name": "Обед",
+                    "slug": "lunch"
+                }
+            ],
+            "author": {
+                "email": "viktor@viktor.ru",
+                "id": 3,
+                "username": "Viktor",
+                "first_name": "Виктор",
+                "last_name": "Сухов",
+                "is_subscribed": false,
+                "avatar": "https://foodgramnoup.zapto.org/media/users/avatars/man__copy1.jpg"
+            },
+            "ingredients": [
+                {
+                    "id": 19,
+                    "name": "макароны",
+                    "measurement_unit": "г",
+                    "amount": 200
+                }
+            ],
+            "is_favorited": false,
+            "is_in_shopping_cart": false,
+            "name": "Макароны с копчёными колбасками в томатно-сливочном соусе",
+            "image": "https://foodgramnoup.zapto.org/media/recipes/749f4c6801b5575e641f0650e7097b9f.jpg",
+            "text": "Хотите рецепт идеального ужина? Он перед вами. Макароны с копчёными колбасками и приятным соусом из сливок и помидоров готовятся быстро. Благодаря соусу обычные макароны становятся нежными, сочными и очень вкусными. Копчёные колбаски, чеснок и базилик добавляют блюду аппетитный аромат, а сыр - только усиливает его сливочный вкус.",
+            "cooking_time": 20
+        }
+    ]
+}
+```
+</details>
+
+- POST: ...api/auth/token/login <br>
+<details>
+<summary>RESPONCE:</summary>
+
+```
+ HTTP 200 OK
+Allow: POST, OPTIONS
+Content-Type: application/json
+Vary: Accept
+
+{
+    "auth_token": "a1fa4f81f3fde008ebf71845296e0ece4d0ad8ec"
+}
+```
+
+</details>
+
+
+-----
+# Автор
+<a href="https://github.com/NoupSange">Михаил Федосеев</a>
